@@ -1,0 +1,175 @@
+#include <stdio.h>
+
+struct Ingresso {
+    int num_ingresso;
+    int linha;
+    int coluna;
+    int sala;
+    int tipo_ingresso;
+    int combo;
+};
+
+int linhas = 5, colunas = 5;
+char cadeiras[3][5][5];
+char filmes[3][50] = {"Vingadores", "Moana", "Indestrutivel, A Vinganca Parte 3"};
+struct Ingresso ingressos[100];
+int contar_ingressos = 0;
+float vendas_total = 0;
+int combos_total = 0;
+
+void Assentos() {
+    for (int s = 0; s < 3; s++) {
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                cadeiras[s][i][j] = 'D';
+            }
+        }
+    }
+}
+
+void exibirAssentos(int sala) {
+    printf("\nMapa da Sala %d - %s:\n", sala + 1, filmes[sala]);
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            printf("%c ", cadeiras[sala][i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void reservarAssento() {
+    int sala, num_ingressos;
+    printf("\nEscolha uma sala:\n");
+    for (int i = 0; i < 3; i++) {
+        printf("%d. Sala %d - %s\n", i + 1, i + 1, filmes[i]);
+    }
+    printf("Escolha de 1 a 3: ");
+    scanf("%d", &sala);
+    if (sala < 1 || sala > 3) {
+        printf("\nSala invalida!\n");
+        return;
+    }
+    sala--;
+
+    printf("\nQuantos ingressos deseja comprar? ");
+    scanf("%d", &num_ingressos);
+    for (int j = 0; j < num_ingressos; j++) {
+        int linha, coluna, tipo_ingresso, combo;
+        float preco = 0;
+        printf("\nReservando ingresso %d de %d\n", j + 1, num_ingressos);
+        exibirAssentos(sala);
+        printf("\nEscolha uma linha (1-%d): ", linhas);
+        scanf("%d", &linha);
+
+        printf("Escolha uma coluna (1-%d): ", colunas);
+        scanf("%d", &coluna);
+        if (linha < 1 || linha > linhas || coluna < 1 || coluna > colunas || cadeiras[sala][linha - 1][coluna - 1] == 'X') {
+            printf("\nLugar ja reservado! Tente novamente.\n");
+            j--;
+            continue;
+        }
+        printf("\nEscolha o tipo de ingresso:\n1. Inteiro (R$ 30)\n2. Meia-entrada (R$ 15)\n");
+        printf("Digite 1 ou 2: ");
+        scanf("%d", &tipo_ingresso);
+        if (tipo_ingresso == 1) {
+            preco = 30;
+        } else if (tipo_ingresso == 2) {
+            preco = 15;
+        } else {
+            printf("\nTipo de ingresso invalido! Tente novamente.\n");
+            j--;
+            continue;
+        }
+        printf("\nDeseja adicionar um combo de pipoca + refrigerante por R$ 35?\n1. Sim \n2. Nao\n");
+        printf("Digite 1 ou 2: ");
+        scanf("%d", &combo);
+        if (combo == 1) {
+            ingressos[contar_ingressos].combo = 1;
+            preco = preco + 35;
+            combos_total++;
+        } else {
+            ingressos[contar_ingressos].combo = 0;
+        }
+        cadeiras[sala][linha - 1][coluna - 1] = 'X';
+        ingressos[contar_ingressos].num_ingresso = contar_ingressos + 1;
+        ingressos[contar_ingressos].linha = linha;
+        ingressos[contar_ingressos].coluna = coluna;
+        ingressos[contar_ingressos].sala = sala;
+        ingressos[contar_ingressos].tipo_ingresso = tipo_ingresso;
+        contar_ingressos++;
+        vendas_total = vendas_total + preco;
+        printf("\nIngresso reservado! Numero do ingresso: %d \n", ingressos[contar_ingressos - 1].num_ingresso);
+    }
+}
+
+void imprimirIngresso() {
+    int num;
+    printf("\nDigite o numero do ingresso: ");
+    scanf("%d", &num);
+    if (num < 1 || num > contar_ingressos) {
+        printf("\nIngresso nao encontrado!\n");
+        return;
+    }
+    struct Ingresso ingresso = ingressos[num - 1];
+    printf("\nNumero do ingresso: %d\nSala: %d (%s)\nLugar: Linha %d, Coluna %d\nTipo: %s\nCombo: %s\n",
+           ingresso.num_ingresso,
+           ingresso.sala + 1, filmes[ingresso.sala],
+           ingresso.linha, ingresso.coluna,
+           ingresso.tipo_ingresso == 1 ? "Inteiro" : "Meia-entrada",
+           ingresso.combo ? "Sim" : "Nao");
+}
+
+void cancelarIngresso() {
+    int num;
+    printf("\nDigite o numero do ingresso para cancelar: ");
+    scanf("%d", &num);
+    if (num < 1 || num > contar_ingressos) {
+        printf("\nIngresso nao encontrado\n");
+        return;
+    }
+    struct Ingresso ingresso = ingressos[num - 1];
+    cadeiras[ingresso.sala][ingresso.linha - 1][ingresso.coluna - 1] = 'D';
+    printf("\nIngresso numero %d cancelado.\n", num);
+}
+
+void relatorio() {
+    printf("\n  Relatorio  \n");
+    printf("Total de ingressos vendidos: %d\n", contar_ingressos);
+    printf("Total de combos vendidos: %d\n", combos_total);
+    printf("Vendas totais: R$ %.2f\n", vendas_total);
+}
+
+int main() {
+    int opcao;
+    Assentos();
+    do {
+        printf("\n---- Bilheteria - Menu principal ----\n");
+        printf("1. Reservar lugar\n");
+        printf("2. Imprimir ingresso\n");
+        printf("3. Cancelar compra\n");
+        printf("4. Relatorio final\n");
+        printf("5. Sair\n");
+        printf("Qual opcao deseja?  ");
+        scanf("%d", &opcao);
+        switch (opcao) {
+            case 1:
+                reservarAssento();
+                break;
+            case 2:
+                imprimirIngresso();
+                break;
+            case 3:
+                cancelarIngresso();
+                break;
+            case 4:
+                relatorio();
+                break;
+            case 5:
+                printf("\nEncerrando...\n");
+                break;
+            default:
+                printf("\nOpcao invalida!\n");
+        }
+    } while (opcao != 5);
+    return 0;
+}
